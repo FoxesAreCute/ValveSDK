@@ -1,0 +1,91 @@
+
+//--------------  Plaza ----------------------
+
+$sequence local_reference "..\Pistol_idle01" frame 0 0
+
+$sequence shootflare "shoot_flare" {
+{ event 1003 21 1 }
+}
+$sequence jumpdown128 "jumpdown_128units" FPS 30 {
+	alignto local_reference
+	walkalign 36 local_reference LX LY LZ 0 65
+}
+$sequence canal3jump1 "Canal_03_jumpdown1" FPS 30 {
+	walkframe 36 LX LY LZ 
+	walkframe 66 LX LY LZ
+}
+$sequence canal3jump2 "Canal_03_jumpdown2" FPS 30 {
+	walkalign 36 local_reference LX LY LZ 0 65
+}
+
+$sequence canal1jump1 "Canal_01_jumpdown1" FPS 30 {
+	walkalign 74 local_reference LX LY LZ 0 95
+	{ event 1003 38 1 }
+	{ event 1003 38 2 }
+}
+
+$sequence barrelpushidle "Canal_06a_pushbarrelidle" FPS 30 loop
+$sequence barrelpush "Canal_06a_pushbarrel" FPS 30
+$sequence canal5bidle1 "Canal_05b_barracksidle01" FPS 30 loop
+$sequence canal5bidle2 "Canal_05b_barracksidle02" FPS 30 loop
+$sequence canal5breact1 "Canal_05b_barracksreact01" FPS 30
+$sequence canal5breact2 "Canal_05b_barracksreact02" FPS 30
+$sequence forcescanner "Force_scanner" FPS 30
+$sequence plazalean "Plaza_baton_lean" FPS 30 loop
+$sequence plazahalt "Plaza_baton_halt" FPS 30
+$sequence plazathreat1 "Plaza_busy_threat_01" FPS 30 ACT_BUSY_THREAT 2
+$sequence plazathreat2 "Plaza_busy_threat_02" FPS 30 ACT_BUSY_THREAT 1
+$sequence dooridle "plaza_doorman_idle01" loop
+$sequence dooropen "plaza_doorman_open" {
+{ event 1003 104 1 }
+{ event 1003 149 2 }
+}
+
+$sequence itemhit "table_item_knockoff" {
+{ event 1003 35 1 }
+}
+
+$sequence adoorenter "apartment_coverdoor_enter" fps 30
+$sequence adoorkick "apartment_bustdoor_kick" fps 30 {
+{ event 1003 20 1 }
+{ event 1003 65 2 }
+{ event AE_CL_PLAYSOUND 20 "d1_trainstation_03.breakin_doorkick" }
+{ event AE_CL_PLAYSOUND 50 "NPC_MetroPolice.Freeze" }
+{ event AE_CL_PLAYSOUND 70 "d1_trainstation_03.breakin_takeemdown" }
+}
+$sequence kickdoorbaton "apartment_kickdoorbaton" fps 30 {
+{ event 1003 29 1 }
+}
+$sequence adooridle "apartment_bustdoor_idle" fps 30 loop
+$sequence adoorknock "apartment_coverdoor_knock" fps 30 loop {
+{ event AE_CL_PLAYSOUND 15 "d1_trainstation_03.breakin_doorknock" }
+{ event AE_CL_PLAYSOUND 23 "d1_trainstation_03.breakin_doorknock" }
+{ event AE_CL_PLAYSOUND 31 "d1_trainstation_03.breakin_doorknock" }
+{ event AE_CL_PLAYSOUND 39 "d1_trainstation_03.breakin_doorknock" }
+}
+$sequence adoorcidle "apartment_coverdoor_idle" fps 30 loop
+
+$sequence harrassidle "plaza_harrass_idle01" loop
+$sequence harrassapcidle "plaza_harrass_APC_idle01" loop
+$sequence harrassapcslam "plaza_harrass_APC_slam01" {
+{ event 1003 57 1 }
+{ event 1003 78 2 }
+}
+
+$sequence luggagewarn "TS_luggage_cop_warn" fps 30
+$sequence luggagepush "TS_luggage_cop_push" fps 30 { event 1003 11 1 }
+$sequence ts_luggageShove_All "ts_luggageSHove_All" fps 30 lx ly lzr
+
+$sequence harrassalert "plaza_harrass_alert01" loop
+
+$sequence APCidle "plaza_APC_idle01" loop
+$sequence SMGcover "plaza_SMG_coveridle" loop
+$sequence Spreadwall "plaza_spreadwall" fps 30
+
+$sequence motionright "Plaza_motion_right" FPS 30
+$sequence motionleft "Plaza_motion_left" FPS 30
+
+$sequence arrestpreidle "canal_arrest_preidle" fps 30 loop
+$sequence arrestpunch "canal_arrest_punch" fps 30 { walkalignto 90 luggagewarn LX LY LZR } 
+$sequence stopwomanpre "canal_arrest_preidle_stopwoman" fps 30 loop
+$sequence stopwoman "canal_arrest_stopwoman" fps 30

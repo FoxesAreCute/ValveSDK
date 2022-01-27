@@ -1,0 +1,183 @@
+//-----------------------------------------------------------------------------
+//
+// Purpose: Translator Options GUI for vsDmxIO
+//
+//-----------------------------------------------------------------------------
+	
+global proc vsDmxIOTranslatorOptionsSetEnabledState()
+{
+	// Go through and set up enabled
+	if ( `optionMenuGrp -q -sl exportType` == 1 )
+	{
+		checkBox -e -en false useTimeline;
+		floatFieldGrp -e -en false fs;
+		floatFieldGrp -e -en false fe;
+		floatFieldGrp -e -en false fi;
+	}
+	else
+	{
+		checkBox -e -en true useTimeline;
+		int $v = !`checkBox -q -v useTimeline`;
+		{
+			floatFieldGrp -e -en $v fs;
+			floatFieldGrp -e -en $v fe;
+			floatFieldGrp -e -en $v fi;
+		}
+	}
+}
+
+
+global proc int vsDmxIOTranslatorOptions(
+	string $i_parent,
+	string $i_action,
+	string $i_initialSettings,
+	string $i_resultCallback)
+{
+	setParent( $i_parent );
+
+	if ( $i_action == "post" )
+	{
+		// Create The Dialog
+		columnLayout -adj true -cat "both" 5;
+		{
+			frameLayout -bv true -bs "etchedIn" -lv false Logo;
+			{
+				rowLayout -nc 2 -cw 1 452;
+				{
+					image( "-w", 452, "-h", 54, "-i", searchPathArray( "vsDmxIOTranslator.png", xbmLangPathList() ) );
+					image( "-w", 452, "-h", 54, "-i", searchPathArray( "vsBackground.png", xbmLangPathList() ) );
+				}
+				setParent ..;
+			}
+			setParent ..;
+
+			frameLayout -bv true -bs "etchedIn" -cl false -cll true -l "Import Options";
+			{
+				columnLayout -adj true;
+				{
+					rowLayout -nc 4 -cw 1 43;
+					{
+						text -l "";
+						optionMenuGrp -l "Import Type" -ann "What to import, a model or animation applied to the currently selected model" importType;
+						{
+							menuItem -label "Auto Detect";
+							menuItem -label "Model";
+							menuItem -label "Animation";
+						}
+						optionMenuGrp -e -sl 1 importType;
+					}
+					setParent ..;
+					rowLayout -nc 4 -cw 1 43;
+					{
+						text -l "";
+						checkBox -l "Set Timeline" -v false
+						-ann "If true, Maya's timeline will be adjusted to match the imported animation"
+						setTimeline;
+					}
+					setParent ..;
+					rowLayout -nc 4 -cw 1 43;
+					{
+						text -l "";
+						checkBox -l "Set Edge Hardness" -v false
+						-ann "If true, the egde hardness will be set on the imported meshes.  NOTE: This can be a slow operation"
+						edgeHardness;
+					}
+					setParent ..;
+				}
+				setParent ..;
+			}
+			setParent ..;
+
+			frameLayout -bv true -bs "etchedIn" -cl false -cll true -l "Export Options" exportOptions;
+			{
+				columnLayout -adj true;
+				{
+					rowLayout -nc 4 -cw 1 43;
+					{
+						text -l "";
+						optionMenuGrp -l "Export Type" -ann "What to export, currently one of model or skeletal animation"
+						-cc "vsDmxIOTranslatorOptionsSetEnabledState"
+						 exportType;
+						{
+							menuItem -label "Model";
+							menuItem -label "Skeletal Animation";
+							menuItem -label "Model & Animation";
+							menuItem -label "Physics Model";
+							menuItem -label "Camera (Static)";
+							menuItem -label "Camera (Animated)";
+						}
+						optionMenuGrp -e -sl 1 exportType;
+					}
+					setParent ..;
+					rowLayout -nc 4 -cw 1 43;
+					{
+						text -l "";
+						checkBox -l "Use Timeline" -v true -en false
+						-ann "If true, Maya's timeline specifies the export frame range, if false, the values below do"
+						-cc "vsDmxIOTranslatorOptionsSetEnabledState"
+						useTimeline;
+					}
+					setParent ..;
+					columnLayout -adj true;
+					{
+						floatFieldGrp -en false -pre 2 -l "Frame Start" -v1 `playbackOptions -q -min` -ann "vsDmxIO export will start at this frame unless \"Use Timeline\" is true" fs;
+						floatFieldGrp -en false -pre 2 -l "Frame End" -v1 `playbackOptions -q -max` -ann "vsDmxIO export will finish with this frame unless \"Use Timeline\" is true" fe;
+						floatFieldGrp -en false -pre 2 -l "Frame Inc" -v1 `playbackOptions -q -by` -ann "vsDmxIO export will step between Frame Start & End by this many frames unless \"Use Timeline\" is true" fi;
+					}
+					setParent ..;
+				}
+				setParent ..;
+			}
+			setParent ..;
+		}
+		setParent ..;
+
+		string $opts[];
+		string $optval[];
+
+		if ( size( $i_initialSettings ) > 0 )
+		{
+			tokenize( $i_initialSettings, ";", $opts );
+			for ( $opt in $opts )
+			{
+				tokenize( $opt, "=", $optval );
+				string $sv = $optval[1];
+				// Handle String Attributes First
+				{
+					int $v = $optval[1];
+					int $nv = !$v;
+					if ( $optval[0] == "useTimeline" ) { checkBox -e -v $v useTimeline; floatFieldGrp -e -en $nv fs; floatFieldGrp -e -en $nv fe; floatFieldGrp -e -en $nv fi; }
+					if ( `checkBox -q -v useTimeline` == false )
+					{
+						if ( $optval[0] == "fs" ) { floatFieldGrp -e -v1 $v fs; }
+						if ( $optval[0] == "fe" ) { floatFieldGrp -e -v1 $v fe; }
+						if ( $optval[0] == "fi" ) { floatFieldGrp -e -v1 $v fi; }
+					}
+					if ( $optval[0] == "exportType" ) { if ( $v > 0 ) { optionMenuGrp -e -sl $v exportType; } }
+					if ( $optval[0] == "importType" ) { if ( $v > 0 ) { optionMenuGrp -e -sl $v importType; } }
+					if ( $optval[0] == "setTimeline" ) { checkBox -e -v $v setTimeline; }
+					if ( $optval[0] == "edgeHardness" ) { checkBox -e -v $v edgeHardness; }
+				}
+			}
+		}
+		
+		vsDmxIOTranslatorOptionsSetEnabledState;
+	}
+	else if ( $i_action == "query" )
+	{
+		string $result;
+
+		$result += ( ";useTimeline=" + `checkBox -q -v useTimeline` );
+		$result += ( ";fs=" + `floatFieldGrp -q -v1 fs` );
+		$result += ( ";fe=" + `floatFieldGrp -q -v1 fe` );
+		$result += ( ";fi=" + `floatFieldGrp -q -v1 fi` );
+		$result += ( ";exportType=" + `optionMenuGrp -q -sl exportType` );
+		$result += ( ";importType=" + `optionMenuGrp -q -sl importType` );
+		$result += ( ";setTimeline=" + `checkBox -q -v setTimeline` );
+		$result += ( ";edgeHardness=" + `checkBox -q -v edgeHardness` );
+
+		eval( $i_resultCallback+" \""+$result+"\"" );
+	}
+
+	return 1;
+}

@@ -1,0 +1,19 @@
+//-----------------------------------------------------------------------------
+//
+// Purpose: Translator Options GUI for vstSmd
+//
+//-----------------------------------------------------------------------------
+	
+global proc int vstSmdPhysicsTranslatorOptions(
+	string $parent,
+	string $action,
+	string $initialSettings,
+	string $resultCallback)
+{
+	return vstSmdIOOptions(
+		"physics",
+		$parent,
+		$action,
+		$initialSettings,
+		$resultCallback );
+}

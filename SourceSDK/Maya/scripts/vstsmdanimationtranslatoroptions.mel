@@ -1,0 +1,19 @@
+//-----------------------------------------------------------------------------
+//
+// Purpose: Translator Options GUI for vstSmd
+//
+//-----------------------------------------------------------------------------
+	
+global proc int vstSmdAnimationTranslatorOptions(
+	string $parent,
+	string $action,
+	string $initialSettings,
+	string $resultCallback)
+{
+	return vstSmdIOOptions(
+		"animation",
+		$parent,
+		$action,
+		$initialSettings,
+		$resultCallback );
+}

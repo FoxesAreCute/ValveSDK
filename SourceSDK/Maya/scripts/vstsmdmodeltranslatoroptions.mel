@@ -1,0 +1,19 @@
+//-----------------------------------------------------------------------------
+//
+// Purpose: Translator Options GUI for vstSmd
+//
+//-----------------------------------------------------------------------------
+	
+global proc int vstSmdModelTranslatorOptions(
+	string $parent,
+	string $action,
+	string $initialSettings,
+	string $resultCallback)
+{
+	return vstSmdIOOptions(
+		"model",
+		$parent,
+		$action,
+		$initialSettings,
+		$resultCallback );
+}

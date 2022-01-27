@@ -1,0 +1,418 @@
+//-----------------------------------------------------------------------------
+//
+// Purpose: Translator Options GUI for vstSmdModel
+//
+//-----------------------------------------------------------------------------
+	
+int $g_vstSmdType = 0;
+	
+global proc vstSmdIOOptionsSetEnabledState()
+{
+	global int $g_vstSmdType;
+	int $tModel =			0;
+	int $tPhysics =			1;
+	int $tAnimation =		2;
+	int $tVertex =			3;
+	int $tModelAnimation =	4;
+	
+	if ( $g_vstSmdType == $tModel || $g_vstSmdType == $tPhysics )
+	{
+		// No Animation
+		
+		checkBoxGrp -e -en true vstSmd_doubleSided;
+		checkBoxGrp -e -en true vstSmd_relativeMaterials;
+		
+		checkBoxGrp -e -en false vstSmd_useTimeline;
+		floatFieldGrp -e -en false vstSmd_fs;
+		floatFieldGrp -e -en false vstSmd_fe;
+		floatFieldGrp -e -en false vstSmd_fi;
+	}
+	else
+	{
+		// Animation
+		if ( $g_vstSmdType == $tModelAnimation )
+		{
+			checkBoxGrp -e -en true vstSmd_doubleSided;
+			checkBoxGrp -e -en true vstSmd_relativeMaterials;
+		}
+		else
+		{
+			checkBoxGrp -e -en false vstSmd_doubleSided;
+			checkBoxGrp -e -en false vstSmd_relativeMaterials;
+		}
+		
+		checkBoxGrp -e -en true vstSmd_useTimeline;
+		int $v = !`checkBoxGrp -q -v1 vstSmd_useTimeline`;
+		{
+			floatFieldGrp -e -en $v vstSmd_fs;
+			floatFieldGrp -e -en $v vstSmd_fe;
+			floatFieldGrp -e -en $v vstSmd_fi;
+		}
+	}
+	
+	int $anp = `checkBoxGrp -q -v1 vstSmd_addNodePrefix`;
+	textFieldGrp -e -en $anp vstSmd_nodePrefix;
+
+	int $nae = !`checkBoxGrp -q -v1 vstSmd_automate`;
+	checkBoxGrp -e -en $nae vstSmd_texture;
+	checkBoxGrp -e -en $nae vstSmd_qc;
+	checkBoxGrp -e -en $nae vstSmd_studiomdl;
+}
+
+
+global proc int vstSmdIOOptions(
+	string $i_type,
+	string $i_parent,
+	string $i_action,
+	string $i_initialSettings,
+	string $i_resultCallback)
+{
+	$i_type = tolower( $i_type );
+	
+	global int $g_vstSmdType;
+	int $tModel =			0;
+	int $tPhysics =			1;
+	int $tAnimation =		2;
+	int $tVertex =			3;
+	int $tModelAnimation =	4;
+	
+	if ( startsWith( $i_type, "modelanimation" ) )
+	{
+		$g_vstSmdType = $tModelAnimation;
+		$i_type = "Animated Model";
+	}
+	else if ( startsWith( $i_type, "m" ) || startsWith( $i_type, "r" ) )
+	{
+		$g_vstSmdType = $tModel;
+		$i_type = "Model";
+	}
+	else if ( startsWith( $i_type, "p" ) )
+	{
+		$g_vstSmdType = $tPhysics;
+		$i_type = "Physics Model";
+	}
+	else if ( startsWith( $i_type, "a" ) || startsWith( $i_type, "s" ) )
+	{
+		$g_vstSmdType = $tAnimation;
+		$i_type = "Skeletal Animation";
+	}
+	else if ( startsWith( $i_type, "v" ) )
+	{
+		$g_vstSmdType = $tVertex;
+		$i_type = "Vertex Animation";
+	}
+	
+	setParent( $i_parent );
+
+	if ( $i_action == "post" )
+	{
+		// Create The Dialog
+		columnLayout -adj true -cat "both" 5;
+		{
+			frameLayout -bv true -bs "etchedIn" -lv false Logo;
+			{
+				rowLayout -nc 2 -cw 1 452;
+				{
+					string $img = searchPathArray( "vstSmdTranslator.png", xbmLangPathList() );
+					image -w 452 -h 54 -i $img;
+					string $img = searchPathArray( "vstBackground.png", xbmLangPathList() );
+					image -w 452 -h 54 -i $img;
+				}
+				setParent ..;
+			}
+			setParent ..;
+			
+			frameLayout -bv true -bs "etchedIn" -cl false -cll true -l "Import Options" importOptions;
+			{
+				columnLayout -adj true -rs 3 -co "both" 3;
+				{
+					checkBoxGrp -l "Import Skeleton" -v1 false -en true
+					-ann "If true skeletons will be imported and skinned.  By default only the mesh is imported... NOTE: This is currently very SLOW!"
+					vstSmd_importSkeleton;
+				}
+				setParent ..;
+			}
+			setParent ..;
+
+			frameLayout -bv true -bs "etchedIn" -cl false -cll true -l "Export Options" exportOptions;
+			{
+				columnLayout -adj true -rs 3 -co "both" 3;
+				{
+					frameLayout -bs "etchedIn" -lv false -mh 5 -mw 5;
+					{
+						rowLayout -nc 4 -cw 1 43 -cat 2 "right" 10;
+						{
+							text -l "";
+							text -al "right" -fn "boldLabelFont" -l "Type:";
+							text -l $i_type typeLabel;
+						}
+						setParent ..;
+					}
+					setParent ..;
+					
+					frameLayout -bv true -bs "etchedIn" -cl false -cll true -labelAlign "center" -l "General" vstSmd_general;
+					{
+						columnLayout -adj true;
+						{
+							rowLayout -nc 4 -cw 1 43 -cat 2 "right" 10;
+							{
+								text -l "";
+								text -al "right" -l "Up Axis";
+								optionMenu vstSmd_upAxis;
+								menuItem -label "$upaxis X";
+								menuItem -label "$upaxis Y";
+								menuItem -label "$upaxis Z";
+								optionMenu -e -v "$upaxis Y" vstSmd_upAxis;
+							}
+							setParent ..;
+
+							checkBoxGrp -l "World Space" -v1 false -en true
+							-ann "If true collapse all bones into 1 worldSpace transform... NOTE: There's currently a bug that prevents it's use with actual skinned stuff..."
+							vstSmd_world;
+							checkBoxGrp -l "Double Sided" -v1 false -en true
+							-ann "If true outputs two triangles for every triangle in any mesh where .doubleSided is true.  NOTE: Meshes default .doubleSided true in Maya, use this option with caution"
+							vstSmd_doubleSided;
+
+							checkBoxGrp -l "Relative Materials" -v1 false -en false
+							-ann "If true materials will be exported with a full relative path name so no $cdmaterials commands will be needed in the .qc file"
+							vstSmd_relativeMaterials;
+
+							checkBoxGrp -l "Export Invisible" -v1 false
+							-ann "Normally invisible stuff (templated, intermediate object, etc...) is not exported, this turns that check off"
+							vstSmd_exportInvisible;
+
+							checkBoxGrp -l "Add Node Prefix" -v1 false
+							-ann "If turned on, the node prefix specified below will be added to each node name on export"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_addNodePrefix;
+
+							textFieldGrp -l "Node Prefix" -tx "ValveBiped." -en false
+							-ann "If add node prefix is selected above, this prefix will be added to each node name on export"
+							vstSmd_nodePrefix;
+							
+							checkBoxGrp -l "Bind Current" -v1 false -en true
+							-ann "If true the current frame will be used as the bind pose."
+							vstSmd_bindCurrent;
+						}
+						setParent ..;
+					}
+					setParent ..;
+
+					frameLayout -bv true -bs "etchedIn" -cl false -cll true -labelAlign "center" -l "Timeline" vstSmd_timeline;
+					{
+						columnLayout -adj true;
+						{
+							checkBoxGrp -l "Use Timeline" -v1 true
+							-ann "If true, Maya's timeline specifies the export frame range, if false, the values below do"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_useTimeline;
+
+							floatFieldGrp -en false -pre 2 -l "Frame Start"
+							-v1 `playbackOptions -q -min`
+							-ann "SMD export will start at this frame unless \"Use Timeline\" is true"
+							vstSmd_fs;
+
+							floatFieldGrp -en false -pre 2 -l "Frame End"
+							-v1 `playbackOptions -q -max`
+							-ann "SMD export will finish with this frame unless \"Use Timeline\" is true"
+							vstSmd_fe;
+
+							floatFieldGrp -en false -pre 2 -l "Frame Inc"
+							-v1 `playbackOptions -q -by`
+							-ann "SMD export will step between Frame Start & End by this many frames unless \"Use Timeline\" is true"
+							vstSmd_fi;
+						}
+						setParent ..;
+					}
+					setParent ..;
+
+					frameLayout -bv true -bs "etchedIn" -cl false -cll true -labelAlign "center" -l "Automation" vstSmd_automation;
+					{
+						columnLayout -adj true;
+						{
+							checkBoxGrp -l "Everything" -v1 false
+							-ann "If turned on, implies all of the operations below are true"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_automate;
+
+							checkBoxGrp -l "Texture" -ncb 3 -v1 false -l1 "Copy" -l2 "vtex" -l3 "vmt"
+							-ann "Texture: Handles simple texture exporting from Maya as a vmt.  Copy: Copy source texture files to a place they can be found by vtex.  vtex: Run vtex to convert the textures to vtf files.  vmt: Create a simple vmt of VertexLitGeneric with the texture as $basetexture"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_texture;
+
+							checkBoxGrp -l "Qc" -ncb 3 -v1 false -l1 "Create" -l2 "Collapse" -l3 "Center"
+							-ann "Create - Creates a Qc file, Collapse - Add $collapsebones, Center - Add $centerbonesonverts"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_qc;
+
+							checkBoxGrp -l "Studiomdl" -v1 false
+							-ann "If turned on, studiomdl will be run after everything is exported"
+							-cc "vstSmdIOOptionsSetEnabledState"
+							vstSmd_studiomdl;
+						}
+						setParent ..;
+					}
+					setParent ..;
+				}
+				setParent ..;
+			}
+			setParent ..;
+		}
+		setParent ..;
+
+		string $opts[];
+		string $optval[];
+
+		if ( size( $i_initialSettings ) > 0 )
+		{
+			tokenize( $i_initialSettings, ";", $opts );
+			for ( $opt in $opts )
+			{
+				tokenize( $opt, "=", $optval );
+				string $sv = $optval[1];
+				// Handle String Attributes First
+				{
+					if ( $optval[0] == "nodePrefix" )
+					{
+						textFieldGrp -e -tx $optval[1] vstSmd_nodePrefix;
+					}
+					else
+					{
+						int $v = $optval[1];
+						int $nv = !$v;
+						if ( $optval[0] == "upAxis" )
+						{
+							optionMenu -e -sl $v vstSmd_upAxis;
+						}
+						else if ( $optval[0] == "exportInvisible" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_exportInvisible;
+						}
+						else if ( $optval[0] == "doubleSided" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_doubleSided;
+						}
+						else if ( $optval[0] == "world" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_world;
+						}
+						else if ( $optval[0] == "bindCurrent" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_bindCurrent;
+						}
+						else if ( $optval[0] == "relativeMaterials" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_relativeMaterials;
+						}
+						else if ( $optval[0] == "addNodePrefix" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_addNodePrefix;
+						}
+						else if ( $optval[0] == "useTimeline" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_useTimeline;
+							floatFieldGrp -e -en $nv vstSmd_fs;
+							floatFieldGrp -e -en $nv vstSmd_fe;
+							floatFieldGrp -e -en $nv vstSmd_fi;
+						}
+						else if ( $optval[0] == "fs" )
+						{
+							floatFieldGrp -e -v1 $v vstSmd_fs;
+						}
+						else if ( $optval[0] == "fe" )
+						{
+							floatFieldGrp -e -v1 $v vstSmd_fe;
+						}
+						else if ( $optval[0] == "fi" )
+						{
+							floatFieldGrp -e -v1 $v vstSmd_fi;
+						}
+						else if ( $optval[0] == "general" )
+						{
+							frameLayout -e -cl $v vstSmd_general;
+						}
+						else if ( $optval[0] == "timeline" )
+						{
+							frameLayout -e -cl $v vstSmd_timeline;
+						}
+						else if ( $optval[0] == "automation" )
+						{
+							frameLayout -e -cl $v vstSmd_automation;
+						}
+						else if ( $optval[0] == "automate" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_automate;
+						}
+						else if ( $optval[0] == "tCopy" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_texture;
+						}
+						else if ( $optval[0] == "tVtex" )
+						{
+							checkBoxGrp -e -v2 $v vstSmd_texture;
+						}
+						else if ( $optval[0] == "tVmt" )
+						{
+							checkBoxGrp -e -v3 $v vstSmd_texture;
+						}
+						else if ( $optval[0] == "qcCreate" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_qc;
+						}
+						else if ( $optval[0] == "qcCenter" )
+						{
+							checkBoxGrp -e -v2 $v vstSmd_qc;
+						}
+						else if ( $optval[0] == "qcCollapse" )
+						{
+							checkBoxGrp -e -v3 $v vstSmd_qc;
+						}
+						else if ( $optval[0] == "studiomdl" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_studiomdl;
+						}
+						else if ( $optval[0] == "importSkeleton" )
+						{
+							checkBoxGrp -e -v1 $v vstSmd_importSkeleton;
+						}
+					}
+				}
+			}
+		}
+		
+		vstSmdIOOptionsSetEnabledState;
+	}
+	else if ( $i_action == "query" )
+	{
+		string $result;
+
+		$result += ( ";upAxis=" + `optionMenu -q -sl vstSmd_upAxis` );
+		$result += ( ";doubleSided=" + `checkBoxGrp -q -v1 vstSmd_doubleSided` );
+		$result += ( ";world=" + `checkBoxGrp -q -v1 vstSmd_world` );
+		$result += ( ";bindCurrent=" + `checkBoxGrp -q -v1 vstSmd_bindCurrent` );
+		$result += ( ";relativeMaterials=" + `checkBoxGrp -q -v1 vstSmd_relativeMaterials` );
+		$result += ( ";exportInvisible=" + `checkBoxGrp -q -v1 vstSmd_exportInvisible` );
+		$result += ( ";addNodePrefix=" + `checkBoxGrp -q -v1 vstSmd_addNodePrefix` );
+		$result += ( ";nodePrefix=" + `textFieldGrp -q -tx vstSmd_nodePrefix` );
+		$result += ( ";useTimeline=" + `checkBoxGrp -q -v1 vstSmd_useTimeline` );
+		$result += ( ";fs=" + `floatFieldGrp -q -v1 vstSmd_fs` );
+		$result += ( ";fe=" + `floatFieldGrp -q -v1 vstSmd_fe` );
+		$result += ( ";fi=" + `floatFieldGrp -q -v1 vstSmd_fi` );
+		$result += ( ";general=" + `frameLayout -q -cl vstSmd_general` );
+		$result += ( ";timeline=" + `frameLayout -q -cl vstSmd_timeline` );
+		$result += ( ";automation=" + `frameLayout -q -cl vstSmd_automation` );
+		$result += ( ";automate=" + `checkBoxGrp -q -v1 vstSmd_automate` );
+		$result += ( ";tCopy=" + `checkBoxGrp -q -v1 vstSmd_texture` );
+		$result += ( ";tVtex=" + `checkBoxGrp -q -v2 vstSmd_texture` );
+		$result += ( ";tVmt=" + `checkBoxGrp -q -v3 vstSmd_texture` );
+		$result += ( ";qcCreate=" + `checkBoxGrp -q -v1 vstSmd_qc` );
+		$result += ( ";qcCollapse=" + `checkBoxGrp -q -v2 vstSmd_qc` );
+		$result += ( ";qcCenter=" + `checkBoxGrp -q -v3 vstSmd_qc` );
+		$result += ( ";studiomdl=" + `checkBoxGrp -q -v1 vstSmd_studiomdl` );
+		$result += ( ";importSkeleton=" + `checkBoxGrp -q -v1 vstSmd_importSkeleton` );
+
+		eval( $i_resultCallback+" \""+$result+"\"" );
+	}
+
+	return 1;
+}

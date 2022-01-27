@@ -1,0 +1,58 @@
+$poseparameter "move_yaw" -180 180 wrap
+
+$attachment "eyes" "ValveBiped.Bip01_Head1" 0 -5 67 absolute
+$attachment "Center" "ValveBiped.Bip01_Spine2" 0 0 40 absolute
+$attachment "Chest" "ValveBiped.Bip01_Spine2" 0 0 55 absolute
+$attachment "LHand" "ValveBiped.Bip01_L_Hand" 3 0 0
+$attachment "RHand" "ValveBiped.Bip01_R_Hand" 3 0 0
+
+$ikchain rfoot "valvebiped.Bip01_R_Foot" Z 0
+$ikchain lfoot "valvebiped.Bip01_L_Foot" Z 0
+
+$alwayscollapse "Police_cheaple_reference.Police"
+$alwayscollapse "ValveBiped.Bip01_Pelvis"
+$alwayscollapse "ValveBiped.Bip01_Spine1"
+$alwayscollapse "ValveBiped.Bip01_Spine4"
+$alwayscollapse "ValveBiped.Bip01_Neck1"
+$alwayscollapse "ValveBiped.Bip01_L_Hand"
+$alwayscollapse "ValveBiped.Bip01_R_Hand"
+
+//----------- NON-COMBAT ANIMATIONS ----------------------
+
+$sequence bidle01 "Bully_idle01" loop FPS 30 activity ACT_IDLE 2
+$sequence bidle02 "Bully_idle02" loop FPS 30 activity ACT_IDLE 1
+
+//-------- MOVEMENT ANIMATIONS ---------------------------
+
+
+// all movement cycles begin right-foot-planted, left-foot-nearest-to-right
+$animation a_WalkS "WalkS" loop LX LY startloop 23 rotateto -180 alignto bidle01
+$animation a_WalkSE "WalkSE" loop LX LY startloop 29 rotateto -135 alignto bidle01
+$animation a_WalkE "WalkE" loop LX LY startloop 25 rotateto -90 alignto bidle01
+$animation a_WalkNE "WalkNE" loop LX LY startloop 25 rotateto -45 alignto bidle01
+$animation a_WalkN "WalkN" loop LX LY startloop 22 rotateto 0 alignto bidle01
+$animation a_WalkNW "WalkNW" loop LX LY startloop 23 rotateto 45 alignto bidle01
+$animation a_WalkW "WalkW" loop LX LY startloop 23 rotateto 90 alignto bidle01
+$animation a_WalkSW "WalkSW" loop LX LY startloop 24 rotateto 135 alignto bidle01
+
+$sequence bwalk {
+	a_walkS a_walkSE a_walkE a_walkNE a_walkN a_walkNW a_walkW a_walkSW a_walkS
+	blendwidth 9 blend move_yaw -180 180 loop ACT_WALK 1 node "walking"
+{ event 2051 9 }
+{ event 2050 23 }
+}
+
+$animation a_RunS "RunS" loop LX LY startloop 1 rotateto -180 alignto bidle01
+$animation a_RunSE "RunSE" loop LX LY startloop 1 rotateto -135 alignto bidle01
+$animation a_RunE "RunE" loop LX LY startloop 1 rotateto -90 alignto bidle01
+$animation a_RunNE "RunNE" loop LX LY startloop 1 rotateto -45 alignto bidle01
+$animation a_RunN "RunN" loop LX LY startloop 0 rotateto 0 alignto bidle01
+$animation a_RunNW "RunNW" loop LX LY startloop 19 rotateto 45 alignto bidle01
+$animation a_RunW "RunW" loop LX LY startloop 19 rotateto 90 alignto bidle01
+$animation a_RunSW "RunSW" loop LX LY startloop 18 rotateto 135 alignto bidle01
+
+$sequence run_all {
+	a_runS a_runSE a_runE a_runNE a_runN a_runNW a_runW a_runSW a_runS
+	blendwidth 9 blend move_yaw -180 180 loop ACT_RUN 1 node "running"
+}
+
